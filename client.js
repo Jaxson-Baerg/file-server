@@ -18,9 +18,8 @@ const toConnect = () => {
 const filePull = (rl) => {
   return new Promise((resolve, reject) => {
     rl.question(`Input file path that you want to pull(./example.txt):\n: `, (answer) => {
-      conn.write(answer);
       rl.close();
-      resolve(answer);
+      resolve(answer += "---");
     });
   });
 };
@@ -32,15 +31,29 @@ const main = async () => {
       conn.write("Client active.");
     });
 
+    conn.on("end", () => {
+      console.log("\nServer Teminated...");
+      process.exit();
+    });
+
     conn.setEncoding("utf8");
     let answ;
     conn.on("data", async data => {
-      console.log("Server Message:", data);
+      if (data.includes("File")) {
+        console.log(data);
+      }
 
       if (data === "ready") {
         const rl = readline.createInterface({
           input: process.stdin,
           output: process.stdout
+        });
+
+        process.stdin.on("keypress", (str, key) => {
+          if (key.ctrl && key.name === "c") {
+            console.log("\nQuitting...");
+            process.exit();
+          }
         });
         
         conn.write(await filePull(rl));
